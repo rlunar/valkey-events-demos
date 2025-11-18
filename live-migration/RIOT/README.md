@@ -1,7 +1,7 @@
 # Redis OSS to Valkey Live migration
 
 ```bash
-export OPN406_DIR=$(pwd)
+export VALKEY_LIVE_MIGRATION=$(pwd)
 export RESP_VERSION=3
 export RESP_PROTOCOL="RESP3"
 ```
@@ -9,14 +9,14 @@ export RESP_PROTOCOL="RESP3"
 ### Install Redis OSS 7.2.4
 
 ```bash
-echo $OPN406_DIR
+echo $VALKEY_LIVE_MIGRATION
 ```
 
 ```bash
-cd $OPN406_DIR
+cd $VALKEY_LIVE_MIGRATION
 wget https://github.com/redis/redis/archive/refs/tags/7.2.4.tar.gz
 tar xvzf 7.2.4.tar.gz
-cd $OPN406_DIR/redis-7.2.4
+cd $VALKEY_LIVE_MIGRATION/redis-7.2.4
 make distclean
 make BUILD_TLS=yes
 ```
@@ -24,7 +24,7 @@ make BUILD_TLS=yes
 ### Create a Redis OSS Cluster
 
 ```bash
-cd $OPN406_DIR/redis-7.2.4/utils/create-cluster
+cd $VALKEY_LIVE_MIGRATION/redis-7.2.4/utils/create-cluster
 ./create-cluster start
 ./create-cluster create -f
 ```
@@ -62,10 +62,10 @@ valkey-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -c -${RESP_VERSION} GET key
 ### Install RIOT
 
 ```bash
-cd $OPN406_DIR
+cd $VALKEY_LIVE_MIGRATION
 wget https://github.com/redis/riot/releases/download/v4.0.4/riot-standalone-4.0.4-osx-aarch64.zip
 unzip riot-standalone-4.0.4-osx-aarch64.zip
-cd $OPN406_DIR/riot-standalone-4.0.4-osx-aarch64/
+cd $VALKEY_LIVE_MIGRATION/riot-standalone-4.0.4-osx-aarch64/
 ```
 
 ### Generate 1 million keys
@@ -92,10 +92,10 @@ SCAN 0 MATCH * COUNT 10 TYPE string
 ### Install Valkey 9.0.0
 
 ```bash
-cd $OPN406_DIR
+cd $VALKEY_LIVE_MIGRATION
 wget https://github.com/valkey-io/valkey/archive/refs/tags/9.0.0.tar.gz
 tar xvzf 9.0.0.tar.gz
-cd $OPN406_DIR/valkey-9.0.0/
+cd $VALKEY_LIVE_MIGRATION/valkey-9.0.0/
 make distclean
 make BUILD_TLS=yes
 ```
@@ -103,7 +103,7 @@ make BUILD_TLS=yes
 ### Create a Valkey Cluster
 
 ```bash
-cd $OPN406_DIR/valkey-9.0.0/utils/create-cluster
+cd $VALKEY_LIVE_MIGRATION/valkey-9.0.0/utils/create-cluster
 ./create-cluster start
 ./create-cluster create -f
 ```
@@ -196,7 +196,7 @@ eval "$(redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} cluster nodes | grep master 
 ### Replicate data
 
 ```bash
-cd $OPN406_DIR/riot-standalone-4.0.4-osx-aarch64/
+cd $VALKEY_LIVE_MIGRATION/riot-standalone-4.0.4-osx-aarch64/
 ```
 
 ```bash
