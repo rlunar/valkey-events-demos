@@ -2,38 +2,20 @@
 # Exit on error, print commands
 set -ex
 
-REDIS_START_PORT=7000
-VALKEY_START_PORT=8000
-CONFIG_FILE="redis-shake.conf"
+NETWORK_NAME="valkey-demo-net"
+REDIS_START_PORT=17000
+VALKEY_START_PORT=18000
+CONFIG_FILE="redis-shake.toml"
 
 echo "--- DEMO: LIVE MIGRATION (REDIS-SHAKE) ---"
 
 # Clean the Valkey cluster from the previous demo
 echo "Flushing Valkey cluster to prepare for live migration..."
-valkey-cli -p $VALKEY_START_PORT cluster nodes | grep 'primary' | awk '{print $2}' | cut -d ':' -f 2 | cut -d '@' -f 1 | while read -r port; do
+podman exec valkey-c-$VALKEY_START_PORT valkey-cli -p $VALKEY_START_PORT cluster nodes | grep 'master' | awk '{print $2}' | cut -d ':' -f 2 | cut -d '@' -f 1 | while read -r port; do
     echo "Flushing node $port"
-    valkey-cli -p "$port" FLUSHALL
+    podman exec valkey-c-$port valkey-cli -p "$port" FLUSHALL
 done
-echo "Valkey cluster flushed. Total keys: $(valkey-cli -c -p $VALKEY_START_PORT DBSIZE)"
-
-# Create redis-shake config
-echo "Creating $CONFIG_FILE"
-cat > "$CONFIG_FILE" << EOL
-[common]
-# log file
-log.file = redis-shake.log
-
-[source]
-type = cluster
-address = 127.0.0.1:$REDIS_START_PORT
-
-[target]
-type = cluster
-address = 127.0.0.1:$VALKEY_START_PORT
-EOL
-
-echo "Config file created:"
-cat "$CONFIG_FILE"
+echo "Valkey cluster flushed. Total keys: $(podman exec valkey-c-$VALKEY_START_PORT valkey-cli -c -p $VALKEY_START_PORT DBSIZE)"
 
 echo ""
 echo "Starting redis-shake in sync mode..."
@@ -41,12 +23,18 @@ echo "It will perform a full sync, then stay connected for live updates."
 echo ""
 echo "******************************************************************"
 echo "IN A NEW TERMINAL, test the live sync:"
-echo "1. Add a key to Redis: redis-cli -c -p $REDIS_START_PORT SET live_key 'it works!'"
-echo "2. Read the key from Valkey: valkey-cli -c -p $VALKEY_START_PORT GET live_key"
+echo "1. Add a key to Redis: podman exec redis-c-$REDIS_START_PORT redis-cli -c -p $REDIS_START_PORT SET live_key 'it works!'"
+echo "2. Read the key from Valkey: podman exec valkey-c-$VALKEY_START_PORT valkey-cli -c -p $VALKEY_START_PORT GET live_key"
 echo "******************************************************************"
 echo ""
 echo "Press [Ctrl+C] to stop redis-shake when you are finished."
 
-# Run redis-shake. This command will block.
-# Ensure 'redis-shake' binary is in your PATH
-redis-shake -conf="$CONFIG_FILE" -type=sync
+# Run redis-shake in a container using environment variables. This command will block.
+podman run --rm \
+    --network "$NETWORK_NAME" \
+    -e SYNC=true \
+    -e SHAKE_SRC_TYPE=sync_cluster \
+    -e SHAKE_SRC_ADDRESS="redis-c-$REDIS_START_PORT:$REDIS_START_PORT" \
+    -e SHAKE_DST_TYPE=cluster \
+    -e SHAKE_DST_ADDRESS="valkey-c-$VALKEY_START_PORT:$VALKEY_START_PORT" \
+    ghcr.io/tair-opensource/redisshake:latest
