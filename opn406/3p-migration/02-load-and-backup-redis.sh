@@ -4,12 +4,15 @@ set -ex
 
 REDIS_START_PORT=17000
 BACKUP_DIR="./redis-backup"
+NETWORK_NAME="valkey-demo-net"
 
-# Load 1000 sample keys
-echo "Loading 1000 sample keys into Redis cluster..."
-for i in $(seq 1 1000); do
-    podman exec redis-c-$REDIS_START_PORT redis-cli -c -p $REDIS_START_PORT SET "key:$i" "value:$i-$RANDOM"
-done
+# Load 1000 sample keys using valkey-benchmark
+echo "Loading 1000 sample keys into Redis cluster using valkey-benchmark..."
+podman run --rm \
+    --network "$NETWORK_NAME" \
+    valkey/valkey:9.0-alpine \
+    valkey-benchmark -h redis-c-$REDIS_START_PORT -p $REDIS_START_PORT \
+    -c 10 -n 1000 -d 10 --cluster -t set
 
 echo "Data loaded. Verifying key distribution..."
 podman exec redis-c-$REDIS_START_PORT redis-cli -p $REDIS_START_PORT cluster nodes
@@ -30,6 +33,9 @@ fi
 echo "Found primary nodes at ports: $PRIMARY_PORTS"
 
 for port in $PRIMARY_PORTS; do
+    echo "Checking keyspace for port $port"
+    podman exec redis-c-$port redis-cli -p "$port" INFO keyspace
+
     echo "Triggering BGSAVE on port $port"
     podman exec redis-c-$port redis-cli -p "$port" BGSAVE
 
