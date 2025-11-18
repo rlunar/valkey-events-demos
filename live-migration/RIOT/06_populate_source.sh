@@ -12,7 +12,7 @@ bin/riot generate \
     --batch=100 \
     --sleep=100 \
     --cluster \
-    --count=10000 \
+    --count=100000 \
     --resp=${RESP_PROTOCOL} \
     --string-value=128 \
     --types=STRING \
