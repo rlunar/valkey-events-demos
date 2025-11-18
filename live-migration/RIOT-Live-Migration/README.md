@@ -6,65 +6,6 @@ export RESP_VERSION=3
 export RESP_PROTOCOL="RESP3"
 ```
 
-```bash
-podman pull valkey/valkey:7-alpine
-```
-
-```bash
-podman run valkey/valkey:7-alpine valkey-cli --help
-```
-
-```bash
-export RESP_VERSION=3
-export REDIS_HOST=host.docker.internal
-export REDIS_PORT=30001
-export RIOT_SOURCE="redis://default:@${REDIS_HOST}:${REDIS_PORT}"
-```
-
-## Docker
-
-```bash
-podman run --network host valkey/valkey:7-alpine valkey-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -c -${RESP_VERSION} PING
-```
-
-```bash
-podman run --network host valkey/valkey:7-alpine valkey-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -c -${RESP_VERSION} CLUSTER INFO
-```
-
-```bash
-podman run --network host valkey/valkey:7-alpine valkey-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -c -${RESP_VERSION} CLUSTER NODES
-```
-
-```bash
-podman run --network host -it --rm valkey/valkey:7-alpine valkey-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -c -${RESP_VERSION}
-```
-
-```bash
-podman pull riotx/riot:v4.0.4
-```
-
-```bash
-podman run --network host -it --rm \
-    riotx/riot:v4.0.4 generate \
-    --cluster --count=1000000 \
-    --string-value=512 --types=STRING \
-    --uri ${RIOT_SOURCE}
-```
-
-```bash
-podman run --network host -it --rm \
-    valkey/valkey:7-alpine valkey-cli \
-    -h ${REDIS_HOST} \
-    -p ${REDIS_PORT} \
-    -${RESP_VERSION} -c
-```
-
-------------------------------------------------------------------------------------------------------------
-
-## Local
-
-------------------------------------------------------------------------------------------------------------
-
 ### Install Redis OSS 7.2.4
 
 ```bash
@@ -199,10 +140,6 @@ valkey-cli -h ${VALKEY_HOST} -p ${VALKEY_PORT} -c -${RESP_VERSION} GET key
 
 ## Live Migration
 
-```bash
-cd $OPN406_DIR/riot-standalone-4.0.4-osx-aarch64/
-```
-
 ### Enable Keyspace Notifications on the Source
 
 ```bash
@@ -257,6 +194,10 @@ eval "$(redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} cluster nodes | grep master 
 ```
 
 ### Replicate data
+
+```bash
+cd $OPN406_DIR/riot-standalone-4.0.4-osx-aarch64/
+```
 
 ```bash
 bin/riot replicate \

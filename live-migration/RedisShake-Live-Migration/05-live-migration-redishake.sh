@@ -17,33 +17,39 @@ podman exec valkey-c-$VALKEY_START_PORT valkey-cli -p $VALKEY_START_PORT cluster
 done
 echo "Valkey cluster flushed. Total keys: $(podman exec valkey-c-$VALKEY_START_PORT valkey-cli -c -p $VALKEY_START_PORT DBSIZE)"
 
-# Create redis-shake TOML config for cluster-to-cluster sync
-echo "Creating $CONFIG_FILE for cluster sync..."
+# Create redis-shake TOML config for cluster-to-cluster migration
+echo "Creating $CONFIG_FILE for cluster migration..."
 cat > "$CONFIG_FILE" << EOL
 [sync_reader]
 cluster = true
-address = "127.0.0.1:$REDIS_START_PORT"
+address = "redis-c-$REDIS_START_PORT:$REDIS_START_PORT"
 
 [redis_writer]
 cluster = true
-address = "127.0.0.1:$VALKEY_START_PORT"
+address = "valkey-c-$VALKEY_START_PORT:$VALKEY_START_PORT"
 EOL
 
 echo "Config file created:"
 cat "$CONFIG_FILE"
 
 echo ""
-echo "Starting redis-shake in sync mode..."
-echo "It will perform a full sync, then stay connected for live updates."
+echo "Starting redis-shake in scan mode for cluster migration..."
+echo "This will scan all keys from Redis cluster and write to Valkey cluster."
 echo ""
 echo "******************************************************************"
-echo "IN A NEW TERMINAL, test the live sync:"
-echo "1. Add a key to Redis: podman exec redis-c-$REDIS_START_PORT redis-cli -c -p $REDIS_START_PORT SET live_key 'it works!'"
-echo "2. Read the key from Valkey: podman exec valkey-c-$VALKEY_START_PORT valkey-cli -c -p $VALKEY_START_PORT GET live_key"
+echo "After migration completes, verify the data:"
+echo "podman exec valkey-c-$VALKEY_START_PORT valkey-cli -c -p $VALKEY_START_PORT DBSIZE"
 echo "******************************************************************"
 echo ""
-echo "Press [Ctrl+C] to stop redis-shake when you are finished."
 
-# Run redis-shake binary. This command will block.
-/Users/rberoj/Code/GitHub/OSS/RedisShake/bin/redis-shake "$CONFIG_FILE"
+# Run redis-shake in a container on the same network with SCAN mode
+podman run --rm \
+    --network "$NETWORK_NAME" \
+    -e SCAN=true \
+    -v "$(pwd)/$CONFIG_FILE:/shake.toml:ro" \
+    ghcr.io/tair-opensource/redisshake:latest \
+    redis-shake /shake.toml
+
+echo ""
+echo "Migration complete!"
 
