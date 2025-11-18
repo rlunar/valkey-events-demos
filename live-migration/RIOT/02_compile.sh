@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 export VALKEY_LIVE_MIGRATION=$(pwd)
 
 # Compile Redis OSS 7.2.4

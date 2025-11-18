@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 source ./config.sh
 
 echo "Cleaning up Redis OSS cluster..."

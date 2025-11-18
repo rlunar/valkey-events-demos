@@ -291,15 +291,21 @@ If I want to find all keys with specific pattern
 On Redis OSS source
 
 ```bash
-valkey-cli -c -3 -h ${REDIS_HOST} -p ${REDIS_PORT} --scan --pattern '*:12345*' --count 100
+valkey-cli -c -3 -h ${REDIS_HOST} -p ${REDIS_PORT} --scan --pattern 'gen:*' --count 100
 ```
 
 On Valkey target
 
 ```bash
-valkey-cli -c -3 -h ${VALKEY_HOST} -p ${VALKEY_PORT} --scan --pattern '*:000000063475*' --count 10
+valkey-cli -c -3 -h ${VALKEY_HOST} -p ${VALKEY_PORT} --scan --pattern 'gen:*' --count 100
 ```
 
+Find a Random key on the source
+```bash
+valkey-cli -c -3 -h ${REDIS_HOST} -p ${REDIS_PORT} RANDOMKEY
+```
+
+Try to find the same Random key on the target
 
 ```bash
 valkey-cli -h ${VALKEY_HOST} -p ${VALKEY_PORT} -c -${RESP_VERSION} GET gen:123456

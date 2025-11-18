@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 source ./config.sh
 
 echo "=== Validating Redis OSS Cluster ==="

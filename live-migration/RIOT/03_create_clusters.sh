@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 source ./config.sh
 
 # Update Redis OSS cluster config to use port 31000

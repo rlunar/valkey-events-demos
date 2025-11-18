@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 export VALKEY_LIVE_MIGRATION=$(pwd)
 
 # Download Redis OSS 7.2.4 if not exists
