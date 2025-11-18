@@ -17,6 +17,21 @@ podman exec valkey-c-$VALKEY_START_PORT valkey-cli -p $VALKEY_START_PORT cluster
 done
 echo "Valkey cluster flushed. Total keys: $(podman exec valkey-c-$VALKEY_START_PORT valkey-cli -c -p $VALKEY_START_PORT DBSIZE)"
 
+# Create redis-shake TOML config for cluster-to-cluster sync
+echo "Creating $CONFIG_FILE for cluster sync..."
+cat > "$CONFIG_FILE" << EOL
+[sync_reader]
+cluster = true
+address = "127.0.0.1:$REDIS_START_PORT"
+
+[redis_writer]
+cluster = true
+address = "127.0.0.1:$VALKEY_START_PORT"
+EOL
+
+echo "Config file created:"
+cat "$CONFIG_FILE"
+
 echo ""
 echo "Starting redis-shake in sync mode..."
 echo "It will perform a full sync, then stay connected for live updates."
@@ -29,12 +44,6 @@ echo "******************************************************************"
 echo ""
 echo "Press [Ctrl+C] to stop redis-shake when you are finished."
 
-# Run redis-shake in a container using environment variables. This command will block.
-podman run --rm \
-    --network "$NETWORK_NAME" \
-    -e SYNC=true \
-    -e SHAKE_SRC_TYPE=sync_cluster \
-    -e SHAKE_SRC_ADDRESS="redis-c-$REDIS_START_PORT:$REDIS_START_PORT" \
-    -e SHAKE_DST_TYPE=cluster \
-    -e SHAKE_DST_ADDRESS="valkey-c-$VALKEY_START_PORT:$VALKEY_START_PORT" \
-    ghcr.io/tair-opensource/redisshake:latest
+# Run redis-shake binary. This command will block.
+/Users/rberoj/Code/GitHub/OSS/RedisShake/bin/redis-shake "$CONFIG_FILE"
+
