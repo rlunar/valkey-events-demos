@@ -3,11 +3,11 @@
 set -ex
 
 NETWORK_NAME="valkey-demo-net"
-VALKEY_START_PORT=8000
+VALKEY_START_PORT=18000
 
 # Check if network exists
 if ! podman network ls | grep -q "$NETWORK_NAME"; then
-    echo "Error: Docker network $NETWORK_NAME not found. Run script 01 first."
+    echo "Error: Network $NETWORK_NAME not found. Run script 00 first."
     exit 1
 fi
 
@@ -19,29 +19,30 @@ for i in $(seq 0 8); do
     echo "Starting valkey-c-$port on port $port"
     podman run -d \
         --name "valkey-c-$port" \
-        --net "$NETWORK_NAME" \
+        --network "$NETWORK_NAME" \
         -p "$port:$port" \
-        valkey/valkey:7.2 \
+        valkey/valkey:7.2-alpine \
         valkey-server --cluster-enabled yes --cluster-node-timeout 5000 --port "$port" --appendonly no
     
-    sleep 0.5
-    HOST_IP=$(podman inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "valkey-c-$port")
-    CLUSTER_HOSTS+="$HOST_IP:$port "
+    # Use container names for cluster creation (they resolve on the network)
+    CLUSTER_HOSTS+="valkey-c-$port:$port "
 done
 
 echo "Waiting for containers to start up..."
 sleep 10
 
-# Create the cluster
+podman ps
+
+# Create the cluster using podman exec
 echo "Creating Valkey cluster..."
-echo "yes" | valkey-cli --cluster create $CLUSTER_HOSTS --cluster-replicas 2
+echo "yes" | podman exec -i valkey-c-$VALKEY_START_PORT valkey-cli --cluster create $CLUSTER_HOSTS --cluster-replicas 2
 
 echo "Waiting for cluster to form..."
 sleep 5
 
-# Check cluster status
+# Check cluster status using podman exec
 echo "Valkey Cluster Info:"
-valkey-cli -p $VALKEY_START_PORT cluster info
-valkey-cli -p $VALKEY_START_PORT cluster nodes | head -n 10
+podman exec valkey-c-$VALKEY_START_PORT valkey-cli -p $VALKEY_START_PORT cluster info
+podman exec valkey-c-$VALKEY_START_PORT valkey-cli -p $VALKEY_START_PORT cluster nodes | head -n 10
 echo "Valkey cluster created successfully. It is currently empty."
-valkey-cli -c -p $VALKEY_START_PORT DBSIZE
+podman exec valkey-c-$VALKEY_START_PORT valkey-cli -c -p $VALKEY_START_PORT DBSIZE
