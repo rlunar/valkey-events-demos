@@ -97,6 +97,142 @@ All configuration is centralized in `config.sh`:
 - **RESP Protocol**: RESP3
 - **Test Data**: 100K STRING keys, 128 bytes each
 
+## Architecture Diagrams
+
+### Cluster Topology
+
+This diagram shows the structure of both the Redis OSS source cluster and the Valkey target cluster:
+
+```mermaid
+graph TB
+    subgraph "Redis OSS 7.2.4 Cluster (Source)"
+        R1["Primary 1<br/>Port 31001<br/>Slots: 0-5460"]
+        R2["Primary 2<br/>Port 31002<br/>Slots: 5461-10922"]
+        R3["Primary 3<br/>Port 31003<br/>Slots: 10923-16383"]
+        R4["Replica 1<br/>Port 31004"]
+        R5["Replica 2<br/>Port 31005"]
+        R6["Replica 3<br/>Port 31006"]
+        
+        R4 -.->|replicates| R1
+        R5 -.->|replicates| R2
+        R6 -.->|replicates| R3
+    end
+    
+    subgraph "Valkey 9.0.0 Cluster (Target)"
+        V1["Primary 1<br/>Port 32001<br/>Slots: 0-5460"]
+        V2["Primary 2<br/>Port 32002<br/>Slots: 5461-10922"]
+        V3["Primary 3<br/>Port 32003<br/>Slots: 10923-16383"]
+        V4["Replica 1<br/>Port 32004"]
+        V5["Replica 2<br/>Port 32005"]
+        V6["Replica 3<br/>Port 32006"]
+        
+        V4 -.->|replicates| V1
+        V5 -.->|replicates| V2
+        V6 -.->|replicates| V3
+    end
+    
+    style R1 fill:#ff6b6b
+    style R2 fill:#ff6b6b
+    style R3 fill:#ff6b6b
+    style R4 fill:#ffa07a
+    style R5 fill:#ffa07a
+    style R6 fill:#ffa07a
+    
+    style V1 fill:#4ecdc4
+    style V2 fill:#4ecdc4
+    style V3 fill:#4ecdc4
+    style V4 fill:#95e1d3
+    style V5 fill:#95e1d3
+    style V6 fill:#95e1d3
+```
+
+### Migration Strategy
+
+This diagram illustrates how RedisShake performs the live migration between clusters:
+
+```mermaid
+sequenceDiagram
+    participant RIOT as RIOT 4.0.4<br/>(Data Generator)
+    participant Redis as Redis OSS Cluster<br/>(31001-31006)
+    participant Shake as RedisShake v4.4.1<br/>(Migration Tool)
+    participant Valkey as Valkey Cluster<br/>(32001-32006)
+    
+    Note over RIOT,Redis: Phase 1: Data Population
+    RIOT->>Redis: Generate 100K keys<br/>(128 bytes each)
+    Redis-->>RIOT: Keys created
+    
+    Note over Redis,Shake: Phase 2: Enable Monitoring
+    Shake->>Redis: CONFIG SET<br/>notify-keyspace-events KEA
+    Redis-->>Shake: Notifications enabled
+    
+    Note over Shake,Valkey: Phase 3: Initial Sync
+    Shake->>Redis: SCAN all keys<br/>(cluster-wide)
+    Redis-->>Shake: Return keys batch
+    Shake->>Valkey: Write keys<br/>(maintain hash slots)
+    Valkey-->>Shake: Keys written
+    
+    Note over Redis,Valkey: Phase 4: Live Replication
+    Redis->>Shake: Keyspace notifications<br/>(SET, DEL, EXPIRE, etc.)
+    Shake->>Valkey: Replicate changes<br/>(real-time)
+    
+    Note over RIOT,Valkey: Phase 5: Validation
+    RIOT->>Redis: Add new keys<br/>(test live sync)
+    Redis->>Shake: Notify changes
+    Shake->>Valkey: Replicate new keys
+    
+    Note over Redis,Valkey: Migration Complete<br/>Source and Target in Sync
+```
+
+### Data Flow Details
+
+```mermaid
+flowchart LR
+    subgraph "Source Cluster"
+        A[Redis Primary 1<br/>31001] 
+        B[Redis Primary 2<br/>31002]
+        C[Redis Primary 3<br/>31003]
+    end
+    
+    subgraph "RedisShake Process"
+        D[Scanner<br/>SCAN command]
+        E[Event Listener<br/>Keyspace notifications]
+        F[Writer<br/>Cluster-aware]
+    end
+    
+    subgraph "Target Cluster"
+        G[Valkey Primary 1<br/>32001]
+        H[Valkey Primary 2<br/>32002]
+        I[Valkey Primary 3<br/>32003]
+    end
+    
+    A -->|Initial scan| D
+    B -->|Initial scan| D
+    C -->|Initial scan| D
+    
+    A -.->|Live changes| E
+    B -.->|Live changes| E
+    C -.->|Live changes| E
+    
+    D --> F
+    E --> F
+    
+    F -->|Hash slot routing| G
+    F -->|Hash slot routing| H
+    F -->|Hash slot routing| I
+    
+    style D fill:#ffe66d
+    style E fill:#ffe66d
+    style F fill:#ffe66d
+    
+    style A fill:#ff6b6b
+    style B fill:#ff6b6b
+    style C fill:#ff6b6b
+    
+    style G fill:#4ecdc4
+    style H fill:#4ecdc4
+    style I fill:#4ecdc4
+```
+
 ## Troubleshooting
 
 **Clusters won't start**: Check if ports 31001-31006 or 32001-32006 are already in use
