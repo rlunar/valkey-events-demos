@@ -1,0 +1,17 @@
+#!/bin/bash
+
+export VALKEY_LIVE_MIGRATION=$(pwd)
+export RESP_VERSION=3
+export RESP_PROTOCOL="RESP3"
+
+export REDIS_HOST=localhost
+export REDIS_PORT=31001
+export REDIS_CLUSTER_PORTS="31001,31002,31003,31004,31005,31006"
+export RIOT_SOURCE="redis://default:@${REDIS_HOST}:${REDIS_PORT}"
+
+export VALKEY_HOST=localhost
+export VALKEY_PORT=32001
+export VALKEY_CLUSTER_PORTS="32001,32002,32003,32004,32005,32006"
+export RIOT_TARGET="redis://default:@${VALKEY_HOST}:${VALKEY_PORT}"
+
+export REDIS_SHAKE_BINARY="$VALKEY_LIVE_MIGRATION/redis-shake-v4.4.1-darwin-arm64/redis-shake"

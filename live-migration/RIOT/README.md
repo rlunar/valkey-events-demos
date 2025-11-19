@@ -82,9 +82,10 @@ Checks DBSIZE and keyspace info on both clusters.
 
 For best demonstration experience, use 3 terminal windows:
 
-**Window 1 (Main):** Run setup scripts (steps 1-6) and start live migration (step 7)
-**Window 2 (Monitoring):** Run `./08_check_dbsize.sh` periodically to monitor migration progress
-**Window 3 (Validation):** Run `./09_random_keys.sh` to validate data consistency during migration
+**Window 1 (Main):** Run setup scripts (steps 1-6) and 
+**Window 2 (Monitoring):** Run `./07_live_migration.sh.sh` to start live migration
+**Window 3 (Monitoring):** Run `./08_check_dbsize.sh` periodically to monitor migration progress
+**Window 4 (Validation):** Run `./09_random_keys.sh` to validate data consistency during migration
 
 Optional 4th window for manual CLI exploration of both clusters.
 

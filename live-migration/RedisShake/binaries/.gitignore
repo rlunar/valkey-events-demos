@@ -1,0 +1,7 @@
+*.tar.gz
+redis-7.2.4/
+valkey-9.0.0/
+redis-shake-v4.4.1-darwin-arm64/
+redis-cluster/
+valkey-cluster/
+redis-shake.toml

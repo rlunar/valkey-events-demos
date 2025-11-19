@@ -4,10 +4,10 @@ set -x
 
 source ./config.sh
 
-echo "Enabling keyspace notifications on Redis OSS cluster..."
+echo "Enabling keyspace notifications 📢 on Redis OSS cluster..."
 valkey-cli --cluster call "${REDIS_HOST}:${REDIS_PORT}" CONFIG SET notify-keyspace-events KEA
 
-echo "Verifying keyspace notifications configuration..."
+echo "Verifying keyspace notifications 📢 configuration..."
 valkey-cli --cluster call "${REDIS_HOST}:${REDIS_PORT}" CONFIG GET notify-keyspace-events
 
 echo "Starting RIOT live migration..."
