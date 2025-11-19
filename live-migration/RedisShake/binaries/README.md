@@ -2,6 +2,8 @@
 
 This project demonstrates live data migration from Redis OSS 7.2.4 to Valkey 9.0.0 using RedisShake v4.4.1. The demo runs entirely with native binaries on macOS ARM64 - no Docker or containers required.
 
+![Valkey-Migration](../../../static/img/Valkey-Migration(Banner).png)
+
 ## What This Demo Does
 
 The demo sets up two separate clusters and migrates data between them:
