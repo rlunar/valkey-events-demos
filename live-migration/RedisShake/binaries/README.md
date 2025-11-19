@@ -131,19 +131,19 @@ graph TB
         V6 -.->|replicates| V3
     end
     
-    style R1 fill:#ff6b6b
-    style R2 fill:#ff6b6b
-    style R3 fill:#ff6b6b
-    style R4 fill:#ffa07a
-    style R5 fill:#ffa07a
-    style R6 fill:#ffa07a
+    style R1 fill:#6983FF
+    style R2 fill:#6983FF
+    style R3 fill:#6983FF
+    style R4 fill:#1A2026
+    style R5 fill:#1A2026
+    style R6 fill:#1A2026
     
-    style V1 fill:#4ecdc4
-    style V2 fill:#4ecdc4
-    style V3 fill:#4ecdc4
-    style V4 fill:#95e1d3
-    style V5 fill:#95e1d3
-    style V6 fill:#95e1d3
+    style V1 fill:#642637
+    style V2 fill:#642637
+    style V3 fill:#642637
+    style V4 fill:#E0A2AF
+    style V5 fill:#E0A2AF
+    style V6 fill:#E0A2AF
 ```
 
 ### Migration Strategy
@@ -220,17 +220,17 @@ flowchart LR
     F -->|Hash slot routing| H
     F -->|Hash slot routing| I
     
-    style D fill:#ffe66d
-    style E fill:#ffe66d
-    style F fill:#ffe66d
+    style D fill:#30176E
+    style E fill:#30176E
+    style F fill:#30176E
     
-    style A fill:#ff6b6b
-    style B fill:#ff6b6b
-    style C fill:#ff6b6b
+    style A fill:#6983FF
+    style B fill:#6983FF
+    style C fill:#6983FF
     
-    style G fill:#4ecdc4
-    style H fill:#4ecdc4
-    style I fill:#4ecdc4
+    style G fill:#642637
+    style H fill:#642637
+    style I fill:#642637
 ```
 
 ## Troubleshooting
