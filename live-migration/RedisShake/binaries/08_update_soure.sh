@@ -4,15 +4,15 @@ set -x
 
 source ./config.sh
 
-echo "Populating Redis OSS cluster with 100K keys of 128 bytes..."
+echo "Updating Redis OSS cluster with 100K keys of 128 bytes..."
 
 cd $VALKEY_LIVE_MIGRATION/riot-standalone-4.0.4-osx-aarch64/
 
 bin/riot generate \
     --batch=100 \
-    --sleep=10 \
+    --sleep=100 \
     --cluster \
-    --count=100000 \
+    --count=10000 \
     --resp=${RESP_PROTOCOL} \
     --string-value=128 \
     --types=STRING \
